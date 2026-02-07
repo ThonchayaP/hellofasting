@@ -109,12 +109,13 @@ st.markdown(apple_css, unsafe_allow_html=True)
 
 st.title("Hello Fasting")
 
-cookie_manager = stx.CookieManager()
+cookie_manager = stx.CookieManager(key="fasting_cookies")
 
 if 'start_time' not in st.session_state:
     st.session_state.start_time = None
 
 cookie_val = cookie_manager.get(cookie="fasting_start_time")
+
 if st.session_state.start_time is None and cookie_val:
     try:
         st.session_state.start_time = datetime.fromisoformat(cookie_val)
@@ -151,8 +152,9 @@ if st.session_state.start_time is None:
     
     if st.button("Start Fasting Now"):
         new_time = datetime.now()
-        st.session_state.start_time = new_time
         cookie_manager.set("fasting_start_time", new_time.isoformat(), expires_at=datetime.now() + timedelta(days=30))
+        st.session_state.start_time = new_time
+        time.sleep(1)
         st.rerun()
         
     with st.expander("Cheating? Set past time"):
@@ -164,8 +166,9 @@ if st.session_state.start_time is None:
             
         if st.button("Set Time"):
             custom_time = datetime.combine(d_input, t_input)
-            st.session_state.start_time = custom_time
             cookie_manager.set("fasting_start_time", custom_time.isoformat(), expires_at=datetime.now() + timedelta(days=30))
+            st.session_state.start_time = custom_time
+            time.sleep(1)
             st.rerun()
 
 else:
@@ -199,6 +202,7 @@ else:
     if st.button("I Give Up (Stop)", type="secondary"):
         st.session_state.start_time = None
         cookie_manager.delete("fasting_start_time")
+        time.sleep(1)
         st.rerun()
 
     time.sleep(1)
