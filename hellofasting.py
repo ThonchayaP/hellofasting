@@ -78,10 +78,25 @@ apple_css = """
         margin-top: 10px;
         margin-bottom: 20px;
     }
+    
+    .summary-card {
+        background-color: rgb(245, 245, 247);
+        border-radius: 24px;
+        padding: 40px 20px;
+        text-align: center;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
 
     .status-emoji {
         font-size: 48px;
         margin-bottom: 15px;
+        display: block;
+    }
+    
+    .summary-emoji {
+        font-size: 64px;
+        margin-bottom: 20px;
         display: block;
     }
 
@@ -152,6 +167,21 @@ apple_css = """
         font-weight: bold;
     }
     
+    .final-time {
+        font-size: 48px;
+        font-weight: 700;
+        color: black;
+        margin-bottom: 10px;
+        font-variant-numeric: tabular-nums;
+    }
+    
+    .quote-text {
+        font-size: 16px;
+        color: rgb(134, 134, 139);
+        font-style: italic;
+        margin-bottom: 30px;
+    }
+    
     div[data-baseweb="input"] {
         background-color: rgb(245, 245, 247) !important;
         border-radius: 12px !important;
@@ -195,7 +225,16 @@ cookie_manager = stx.CookieManager(key="fasting_cookies")
 if 'start_time' not in st.session_state:
     st.session_state.start_time = None
 
-if st.session_state.start_time is None:
+if 'fasting_ended' not in st.session_state:
+    st.session_state.fasting_ended = False
+    
+if 'final_duration' not in st.session_state:
+    st.session_state.final_duration = ""
+    
+if 'final_hours' not in st.session_state:
+    st.session_state.final_hours = 0
+
+if st.session_state.start_time is None and not st.session_state.fasting_ended:
     time.sleep(0.1) 
     cookie_val = cookie_manager.get(cookie="fasting_start_time")
     if cookie_val:
@@ -205,14 +244,14 @@ if st.session_state.start_time is None:
             st.session_state.start_time = None
 
 FASTING_STAGES = [
-    {"min": 0, "max": 4, "title": "Full Stomach", "desc": "Body digesting food. High insulin.", "emoji": "😋"},
-    {"min": 4, "max": 8, "title": "The Crash", "desc": "Blood sugar normalizes. Hunger strikes.", "emoji": "📉"},
-    {"min": 8, "max": 12, "title": "Fat Burning", "desc": "Digestive system rests. Healing begins.", "emoji": "🔥"},
-    {"min": 12, "max": 16, "title": "Ketosis Entry", "desc": "Body starts burning stored fat.", "emoji": "🥑"},
-    {"min": 16, "max": 18, "title": "Deep Ketosis", "desc": "Fat burning ramps up. 16:8 Goal.", "emoji": "⚡"},
-    {"min": 18, "max": 24, "title": "Autophagy", "desc": "Cellular recycling and cleanup.", "emoji": "♻️"},
-    {"min": 24, "max": 36, "title": "HGH Spike", "desc": "Growth hormone peaks. Muscle protection.", "emoji": "🧬"},
-    {"min": 36, "max": 48, "title": "God Mode", "desc": "Immune reset. Dopamine increase.", "emoji": "🚀"},
+    {"min": 0, "max": 4, "title": "Full Stomach", "desc": "Still digesting that massive meal, aren't you?", "emoji": "😋"},
+    {"min": 4, "max": 8, "title": "The Crash", "desc": "Hangry mode activated. Don't talk to anyone.", "emoji": "📉"},
+    {"min": 8, "max": 12, "title": "Fat Burning... Maybe", "desc": "Body is finally waking up. About time.", "emoji": "🔥"},
+    {"min": 12, "max": 16, "title": "Ketosis Entry", "desc": "Burning fat now. Don't ruin it with a cookie.", "emoji": "🥑"},
+    {"min": 16, "max": 18, "title": "Deep Ketosis", "desc": "You are literally melting. Keep going.", "emoji": "⚡"},
+    {"min": 18, "max": 24, "title": "Autophagy", "desc": "Eating yourself (in a good way). Science!", "emoji": "♻️"},
+    {"min": 24, "max": 36, "title": "HGH Spike", "desc": "You are basically Hulk right now.", "emoji": "🧬"},
+    {"min": 36, "max": 48, "title": "God Mode", "desc": "Who needs food? Food is for the weak.", "emoji": "🚀"},
     {"min": 48, "max": 9999, "title": "Skeleton", "desc": "There is nothing left to burn. You are just bones.", "emoji": "💀"}
 ]
 
@@ -222,7 +261,48 @@ def get_current_stage_info(hours):
             return stage
     return FASTING_STAGES[-1]
 
-if st.session_state.start_time is None:
+def get_motivational_quote(hours):
+    if hours < 2:
+        return "That was a nap, not a fast. Are you kidding me?", "🤡"
+    elif hours < 8:
+        return "Did you trip and fall into a buffet? Pathetic.", "🍼"
+    elif hours < 12:
+        return "My cat fasts longer than this. Try harder.", "🐈"
+    elif hours < 16:
+        return "Barely acceptable. You basically just skipped breakfast.", "🥱"
+    elif hours < 20:
+        return "Okay, not terrible. You survive another day.", "😏"
+    elif hours < 24:
+        return "Savage. You must really hate food (or yourself).", "💀"
+    else:
+        return "Absolute psychopath. Go eat a burger before you ascend.", "👽"
+
+if st.session_state.fasting_ended:
+    if st.session_state.final_hours >= 16:
+        st.balloons()
+    
+    quote, emoji = get_motivational_quote(st.session_state.final_hours)
+    
+    st.markdown(
+        f"""
+        <div class="summary-card">
+            <span class="summary-emoji">{emoji}</span>
+            <div style="font-size: 14px; color: #86868b; margin-bottom: 5px; text-transform: uppercase; font-weight: 600;">Total Fasted Time</div>
+            <div class="final-time">{st.session_state.final_duration}</div>
+            <div class="quote-text">"{quote}"</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    
+    if st.button("Start New Fast"):
+        st.session_state.fasting_ended = False
+        st.session_state.start_time = None
+        st.session_state.final_duration = ""
+        st.session_state.final_hours = 0
+        st.rerun()
+
+elif st.session_state.start_time is None:
     st.markdown(
         """
         <div style="text-align: center; padding: 60px 20px;">
@@ -330,7 +410,11 @@ else:
     st.write("")
     
     if st.button("I Give Up (Stop)", type="secondary"):
+        st.session_state.final_hours = hours
+        st.session_state.final_duration = f"{hours}h {minutes}m"
+        st.session_state.fasting_ended = True
         st.session_state.start_time = None
+        
         try:
             cookie_manager.delete("fasting_start_time")
         except:
