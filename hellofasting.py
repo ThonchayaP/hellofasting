@@ -244,15 +244,15 @@ if st.session_state.start_time is None and not st.session_state.fasting_ended:
             st.session_state.start_time = None
 
 FASTING_STAGES = [
-    {"min": 0, "max": 4, "title": "Full Stomach", "desc": "Still digesting that massive meal, aren't you?", "emoji": "😋"},
-    {"min": 4, "max": 8, "title": "The Crash", "desc": "Hangry mode activated. Don't talk to anyone.", "emoji": "📉"},
-    {"min": 8, "max": 12, "title": "Fat Burning... Maybe", "desc": "Body is finally waking up. About time.", "emoji": "🔥"},
-    {"min": 12, "max": 16, "title": "Ketosis Entry", "desc": "Burning fat now. Don't ruin it with a cookie.", "emoji": "🥑"},
-    {"min": 16, "max": 18, "title": "Deep Ketosis", "desc": "You are literally melting. Keep going.", "emoji": "⚡"},
-    {"min": 18, "max": 24, "title": "Autophagy", "desc": "Eating yourself (in a good way). Science!", "emoji": "♻️"},
-    {"min": 24, "max": 36, "title": "HGH Spike", "desc": "You are basically Hulk right now.", "emoji": "🧬"},
-    {"min": 36, "max": 48, "title": "God Mode", "desc": "Who needs food? Food is for the weak.", "emoji": "🚀"},
-    {"min": 48, "max": 9999, "title": "Skeleton", "desc": "There is nothing left to burn. You are just bones.", "emoji": "💀"}
+    {"min": 0, "max": 4, "title": "Full", "desc": "Fueling up for the journey.", "emoji": "😋"},
+    {"min": 4, "max": 8, "title": "Calm", "desc": "Blood sugar is stabilizing.", "emoji": "🧘"},
+    {"min": 8, "max": 12, "title": "Ready", "desc": "Switching to fat burn.", "emoji": "🔥"},
+    {"min": 12, "max": 16, "title": "Burn", "desc": "Fat loss in progress.", "emoji": "🥑"},
+    {"min": 16, "max": 18, "title": "Zone", "desc": "Deep energy state.", "emoji": "⚡"},
+    {"min": 18, "max": 24, "title": "Fresh", "desc": "Cellular cleanup time.", "emoji": "✨"},
+    {"min": 24, "max": 36, "title": "Heal", "desc": "Body repair mode.", "emoji": "🌿"},
+    {"min": 36, "max": 48, "title": "Clear", "desc": "Mind is sharp.", "emoji": "💡"},
+    {"min": 48, "max": 9999, "title": "Hero", "desc": "Maximum benefits.", "emoji": "🚀"}
 ]
 
 def get_current_stage_info(hours):
@@ -263,19 +263,19 @@ def get_current_stage_info(hours):
 
 def get_motivational_quote(hours):
     if hours < 2:
-        return "That was a nap, not a fast. Are you kidding me?", "🤡"
+        return "Off to a good start.", "🌱"
     elif hours < 8:
-        return "Did you trip and fall into a buffet? Pathetic.", "🍼"
+        return "You've got this.", "✌️"
     elif hours < 12:
-        return "My cat fasts longer than this. Try harder.", "🐈"
+        return "Staying strong.", "💪"
     elif hours < 16:
-        return "Barely acceptable. You basically just skipped breakfast.", "🥱"
+        return "Doing great work.", "🌟"
     elif hours < 20:
-        return "Okay, not terrible. You survive another day.", "😏"
+        return "Amazing dedication.", "💎"
     elif hours < 24:
-        return "Savage. You must really hate food (or yourself).", "💀"
+        return "Super impressive.", "🏆"
     else:
-        return "Absolute psychopath. Go eat a burger before you ascend.", "👽"
+        return "Fasting master.", "👑"
 
 if st.session_state.fasting_ended:
     if st.session_state.final_hours >= 16:
@@ -424,3 +424,4 @@ else:
 
     time.sleep(1)
     st.rerun()
+
