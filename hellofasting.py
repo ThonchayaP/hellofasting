@@ -31,13 +31,46 @@ apple_css = """
 
     header, footer, .stDeployButton { display: none !important; }
 
-    h1 {
-        font-weight: 700 !important;
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-6px); }
+        100% { transform: translateY(0px); }
+    }
+
+    @keyframes breathe {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); }
+    }
+
+    @keyframes burn {
+        0% { text-shadow: 0 0 5px rgba(0,0,0,0.1); transform: scale(1); }
+        50% { text-shadow: 0 0 15px rgba(0,0,0,0.15); transform: scale(1.02); }
+        100% { text-shadow: 0 0 5px rgba(0,0,0,0.1); transform: scale(1); }
+    }
+
+    .theme-idle {
+        animation: float 4s ease-in-out infinite;
         color: var(--ios-text) !important;
+    }
+
+    .theme-calm {
+        animation: breathe 4s ease-in-out infinite;
+        color: var(--ios-text) !important;
+    }
+
+    .theme-burn {
+        animation: burn 0.8s ease-in-out infinite;
+        color: var(--ios-text) !important;
+    }
+
+    h1 {
+        font-weight: 800 !important;
         text-align: center;
         margin-top: 10px;
-        letter-spacing: -0.5px;
-        font-size: 24px !important;
+        letter-spacing: -1px;
+        font-size: 28px !important;
+        transition: all 0.5s ease;
     }
 
     .stButton > button {
@@ -170,7 +203,6 @@ apple_css = """
 </style>
 """
 st.markdown(apple_css, unsafe_allow_html=True)
-st.title("Hello Fasting")
 
 cookie_manager = stx.CookieManager(key="fasting_manager")
 
@@ -189,30 +221,32 @@ if 'confirm_stop' not in st.session_state:
 if 'history' not in st.session_state:
     st.session_state.history = []
 
+cookies = cookie_manager.get_all()
+
 if not st.session_state.initialized:
-    time.sleep(0.2)
-    
-    c_start = cookie_manager.get("fasting_start_time")
-    if c_start:
-        try:
-            st.session_state.start_time = datetime.fromisoformat(c_start)
-        except:
-            st.session_state.start_time = None
-            
-    c_hist = cookie_manager.get("fasting_history")
-    if c_hist:
-        try:
-            if isinstance(c_hist, str):
-                st.session_state.history = json.loads(c_hist)
-            elif isinstance(c_hist, list):
-                st.session_state.history = c_hist
-            else:
-                st.session_state.history = []
-        except:
-            st.session_state.history = []
-            
-    st.session_state.initialized = True
-    st.rerun()
+    if cookies:
+        c_start = cookies.get("fasting_start_time")
+        if c_start:
+            try:
+                st.session_state.start_time = datetime.fromisoformat(c_start)
+            except:
+                st.session_state.start_time = None
+        
+        c_hist = cookies.get("fasting_history")
+        if c_hist:
+            try:
+                if isinstance(c_hist, str):
+                    st.session_state.history = json.loads(c_hist)
+                elif isinstance(c_hist, list):
+                    st.session_state.history = c_hist
+            except:
+                pass
+        
+        st.session_state.initialized = True
+        st.rerun()
+    else:
+        time.sleep(1)
+        st.rerun()
 
 FASTING_STAGES = [
     {"min": 0, "max": 4, "title": "Full", "desc": "Fueling up for the journey.", "emoji": "😋"},
@@ -240,6 +274,19 @@ def get_quote(hours):
     elif hours < 24: return "Super impressive.", "🏆"
     else: return "Fasting master.", "👑"
 
+title_class = "theme-idle"
+if st.session_state.start_time is not None:
+    now_calc = datetime.now()
+    diff_calc = now_calc - st.session_state.start_time
+    total_sec_calc = int(diff_calc.total_seconds())
+    h_calc = total_sec_calc // 3600
+    if h_calc < 12:
+        title_class = "theme-calm"
+    else:
+        title_class = "theme-burn"
+
+st.markdown(f'<h1 class="{title_class}">Hello Fasting</h1>', unsafe_allow_html=True)
+
 if st.session_state.fasting_ended:
     if st.session_state.final_hours >= 16:
         st.balloons()
@@ -266,7 +313,7 @@ if st.session_state.fasting_ended:
         except:
             pass
         
-        time.sleep(0.1)
+        time.sleep(0.5)
         st.rerun()
 
 elif st.session_state.start_time is None:
@@ -285,7 +332,7 @@ elif st.session_state.start_time is None:
             cookie_manager.set("fasting_start_time", new_time.isoformat(), expires_at=datetime.now() + timedelta(days=30))
         except:
             pass
-        time.sleep(0.2)
+        time.sleep(0.5)
         st.rerun()
         
     st.markdown("<div class='caption-note' style='margin-top:20px;'>Safe to close browser • Timer persists</div>", unsafe_allow_html=True)
@@ -350,7 +397,10 @@ else:
             st.markdown(
                 f"""<div class="{card_class} timeline-item">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-<span style="font-weight:700; font-size:15px; letter-spacing:-0.3px;">{s['emoji']} {s['title']}</span>
+<span style="font-weight:700; font-size:15px; letter-spacing:-0.3px;">
+    {s['emoji']} {s['title']} 
+    <span style="color:#8E8E93; font-size:13px; margin-left:8px; font-weight:400;">{range_text}</span>
+</span>
 {icon_html}
 </div>
 <div style="font-size:13px; color:#555; line-height:1.4;">{s['desc']}</div>
@@ -376,13 +426,13 @@ else:
         with col1:
             if st.button("End It"):
                 st.session_state.final_hours = hours
-                st.session_state.final_duration = f"{hours}h {minutes}m"
+                st.session_state.final_duration = f"{hours}h {minutes}m {seconds}s"
                 st.session_state.fasting_ended = True
                 
                 hist_emoji = get_quote(hours)[1]
                 new_entry = {
                     "date": datetime.now().strftime("%d/%m"),
-                    "duration": f"{hours}h {minutes}m",
+                    "duration": f"{hours}h {minutes}m {seconds}s",
                     "emoji": hist_emoji
                 }
                 
@@ -397,7 +447,7 @@ else:
                 
                 st.session_state.start_time = None
                 st.session_state.confirm_stop = False
-                time.sleep(0.1)
+                time.sleep(0.5)
                 st.rerun()
                 
         with col2:
