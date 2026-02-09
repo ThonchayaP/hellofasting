@@ -2,6 +2,7 @@ import streamlit as st
 import extra_streamlit_components as stx
 from datetime import datetime, timedelta
 import time
+import json
 
 st.set_page_config(
     page_title="Hello Fasting",
@@ -13,235 +14,168 @@ st.set_page_config(
 apple_css = """
 <style>
     :root {
-        color-scheme: light;
+        --ios-bg: #F2F2F7;
+        --ios-card: #FFFFFF;
+        --ios-text: #1C1C1E;
+        --ios-subtext: #8E8E93;
+        --ios-blue: #007AFF;
+        --ios-red: #FF3B30;
     }
 
-    html, body, .stApp {
-        background-color: white !important;
-        font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
-        color: black !important;
+    .stApp {
+        background-color: var(--ios-bg) !important;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif !important;
+        color: var(--ios-text) !important;
     }
 
-    header, footer, .stDeployButton {
-        display: none !important;
-        visibility: hidden !important;
-    }
+    header, footer, .stDeployButton { display: none !important; }
 
     h1 {
-        font-weight: 700 !important;
-        color: black !important;
+        font-weight: 800 !important;
+        color: var(--ios-text) !important;
         text-align: center;
-        margin-top: 20px;
-        margin-bottom: 30px;
+        margin-top: 10px;
+        letter-spacing: -0.5px;
     }
 
     .stButton > button {
         width: 100%;
-        border-radius: 12px !important;
-        background-color: rgb(0, 113, 227) !important;
+        border-radius: 14px !important;
+        background-color: var(--ios-blue) !important;
         color: white !important;
         border: none !important;
-        font-weight: 500 !important;
-        padding: 14px !important;
-        font-size: 16px !important;
+        font-weight: 600 !important;
+        padding: 16px !important;
+        font-size: 17px !important;
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+        transition: transform 0.1s;
     }
     
-    .stButton > button:hover {
-        background-color: rgb(0, 122, 255) !important;
-    }
+    .stButton > button:active { transform: scale(0.96); }
 
     .big-timer {
-        font-size: 72px;
-        font-weight: 600;
+        font-size: 80px;
+        font-weight: 700;
         text-align: center;
         font-feature-settings: "tnum";
         font-variant-numeric: tabular-nums;
-        color: black;
-        margin-top: 30px;
-        margin-bottom: 5px;
+        color: var(--ios-text);
+        margin-top: 20px;
         line-height: 1;
+        letter-spacing: -2px;
     }
 
     .caption-note {
         font-size: 13px;
-        color: rgb(134, 134, 139);
+        color: var(--ios-subtext);
         text-align: center;
         margin-bottom: 25px;
-        font-weight: 400;
+        font-weight: 500;
+        margin-top: 10px;
     }
 
-    .status-card {
-        background-color: rgb(245, 245, 247);
-        border-radius: 24px;
+    .status-card, .summary-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: saturate(180%) blur(20px);
+        border-radius: 22px;
         padding: 30px;
         text-align: center;
-        margin-top: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
         margin-bottom: 20px;
+        border: 1px solid rgba(255,255,255,0.5);
     }
     
-    .summary-card {
-        background-color: rgb(245, 245, 247);
-        border-radius: 24px;
-        padding: 40px 20px;
-        text-align: center;
-        margin-top: 20px;
-        margin-bottom: 20px;
-    }
-
-    .status-emoji {
-        font-size: 48px;
-        margin-bottom: 15px;
-        display: block;
-    }
-    
-    .summary-emoji {
-        font-size: 64px;
-        margin-bottom: 20px;
-        display: block;
-    }
-
-    .status-range {
-        font-size: 11px;
-        color: rgb(0, 113, 227);
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 5px;
-        display: block;
-    }
-
-    .status-title {
-        font-size: 20px;
-        font-weight: 600;
-        color: black;
-        margin-bottom: 8px;
-    }
-
-    .status-desc {
-        font-size: 15px;
-        color: rgb(100, 100, 100);
-        line-height: 1.5;
-    }
-    
-    .timeline-item {
+    .history-card {
+        background: white;
+        border-radius: 16px;
         padding: 15px;
-        border-radius: 12px;
         margin-bottom: 10px;
-        border: 1px solid transparent;
-        transition: all 0.2s;
-    }
-    
-    .timeline-active {
-        background-color: white;
-        border: 2px solid rgb(0, 113, 227);
-        box-shadow: 0 4px 12px rgba(0, 113, 227, 0.1);
-    }
-    
-    .timeline-passed {
-        opacity: 0.5;
-        background-color: rgb(245, 245, 247);
-    }
-    
-    .timeline-future {
-        background-color: white;
-        border: 1px solid rgb(240, 240, 240);
-        opacity: 0.8;
-    }
-    
-    .timeline-header {
-        font-weight: 600;
-        font-size: 14px;
-        margin-bottom: 2px;
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    .status-emoji { font-size: 50px; margin-bottom: 15px; display: block; }
+    
+    .status-range {
+        font-size: 11px; color: var(--ios-blue); font-weight: 700;
+        text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: block;
     }
     
-    .timeline-text {
-        font-size: 12px;
-        color: rgb(100, 100, 100);
+    .status-title { font-size: 22px; font-weight: 700; margin-bottom: 5px; }
+    .status-desc { font-size: 15px; color: #3A3A3C; }
+
+    .timeline-item {
+        padding: 12px 16px;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        background: rgba(255,255,255,0.4);
     }
-    
-    .checkmark {
-        color: rgb(0, 113, 227);
-        font-weight: bold;
-    }
-    
-    .final-time {
-        font-size: 48px;
-        font-weight: 700;
-        color: black;
-        margin-bottom: 10px;
-        font-variant-numeric: tabular-nums;
-    }
-    
-    .quote-text {
-        font-size: 16px;
-        color: rgb(134, 134, 139);
-        font-style: italic;
-        margin-bottom: 30px;
-    }
-    
-    div[data-baseweb="input"] {
-        background-color: rgb(245, 245, 247) !important;
-        border-radius: 12px !important;
-        border: none !important;
-        color: black !important;
-    }
-    
-    input {
-        color: black !important;
-    }
-    
-    iframe {
-        display: none;
-    }
+    .timeline-active { background: white; box-shadow: 0 2px 12px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
+    .timeline-passed { opacity: 0.5; }
     
     div[data-testid="stExpander"] {
-        background-color: white !important;
+        background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
     }
-    
-    div[data-testid="stExpander"] > details > summary {
-        color: rgb(0, 113, 227) !important;
-        font-weight: 500 !important;
-        font-size: 14px !important;
-        background-color: white !important;
-        justify-content: center;
-    }
-    
-    div[data-testid="stExpander"] > details > summary:hover {
-        color: rgb(0, 122, 255) !important;
+
+    .confirm-box {
+        background: #fff;
+        border-radius: 18px;
+        padding: 20px;
+        text-align: center;
+        margin-top: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        border: 1px solid rgba(0,0,0,0.05);
     }
 </style>
 """
 st.markdown(apple_css, unsafe_allow_html=True)
-
 st.title("Hello Fasting")
 
-cookie_manager = stx.CookieManager(key="fasting_cookies")
+cookie_manager = stx.CookieManager(key="fasting_manager")
 
+if 'initialized' not in st.session_state:
+    st.session_state.initialized = False
 if 'start_time' not in st.session_state:
     st.session_state.start_time = None
-
 if 'fasting_ended' not in st.session_state:
     st.session_state.fasting_ended = False
-    
 if 'final_duration' not in st.session_state:
     st.session_state.final_duration = ""
-    
 if 'final_hours' not in st.session_state:
     st.session_state.final_hours = 0
+if 'confirm_stop' not in st.session_state:
+    st.session_state.confirm_stop = False
+if 'history' not in st.session_state:
+    st.session_state.history = []
 
-if st.session_state.start_time is None and not st.session_state.fasting_ended:
-    time.sleep(0.1) 
-    cookie_val = cookie_manager.get(cookie="fasting_start_time")
-    if cookie_val:
+if not st.session_state.initialized:
+    time.sleep(0.2)
+    
+    c_start = cookie_manager.get("fasting_start_time")
+    if c_start:
         try:
-            st.session_state.start_time = datetime.fromisoformat(cookie_val)
+            st.session_state.start_time = datetime.fromisoformat(c_start)
         except:
             st.session_state.start_time = None
+            
+    c_hist = cookie_manager.get("fasting_history")
+    if c_hist:
+        try:
+            if isinstance(c_hist, str):
+                st.session_state.history = json.loads(c_hist)
+            elif isinstance(c_hist, list):
+                st.session_state.history = c_hist
+            else:
+                st.session_state.history = []
+        except:
+            st.session_state.history = []
+            
+    st.session_state.initialized = True
+    st.rerun()
 
 FASTING_STAGES = [
     {"min": 0, "max": 4, "title": "Full", "desc": "Fueling up for the journey.", "emoji": "😋"},
@@ -255,64 +189,57 @@ FASTING_STAGES = [
     {"min": 48, "max": 9999, "title": "Hero", "desc": "Maximum benefits.", "emoji": "🚀"}
 ]
 
-def get_current_stage_info(hours):
+def get_current_stage(hours):
     for stage in FASTING_STAGES:
-        if hours < stage["max"]:
-            return stage
+        if hours < stage["max"]: return stage
     return FASTING_STAGES[-1]
 
-def get_motivational_quote(hours):
-    if hours < 2:
-        return "Off to a good start.", "🌱"
-    elif hours < 8:
-        return "You've got this.", "✌️"
-    elif hours < 12:
-        return "Staying strong.", "💪"
-    elif hours < 16:
-        return "Doing great work.", "🌟"
-    elif hours < 20:
-        return "Amazing dedication.", "💎"
-    elif hours < 24:
-        return "Super impressive.", "🏆"
-    else:
-        return "Fasting master.", "👑"
+def get_quote(hours):
+    if hours < 2: return "Off to a good start.", "🌱"
+    elif hours < 8: return "You've got this.", "✌️"
+    elif hours < 12: return "Staying strong.", "💪"
+    elif hours < 16: return "Doing great work.", "🌟"
+    elif hours < 20: return "Amazing dedication.", "💎"
+    elif hours < 24: return "Super impressive.", "🏆"
+    else: return "Fasting master.", "👑"
 
 if st.session_state.fasting_ended:
     if st.session_state.final_hours >= 16:
         st.balloons()
     
-    quote, emoji = get_motivational_quote(st.session_state.final_hours)
+    quote, emoji = get_quote(st.session_state.final_hours)
     
     st.markdown(
-        f"""
-        <div class="summary-card">
-            <span class="summary-emoji">{emoji}</span>
-            <div style="font-size: 14px; color: #86868b; margin-bottom: 5px; text-transform: uppercase; font-weight: 600;">Total Fasted Time</div>
-            <div class="final-time">{st.session_state.final_duration}</div>
-            <div class="quote-text">"{quote}"</div>
-        </div>
-        """,
+        f"""<div class="summary-card">
+<span class="status-emoji">{emoji}</span>
+<div style="font-size: 13px; color: #8E8E93; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">Total Fasted Time</div>
+<div style="font-size: 56px; font-weight: 800; color: #1C1C1E; margin: 10px 0;">{st.session_state.final_duration}</div>
+<div style="font-size: 16px; color: #8E8E93; font-style: italic;">"{quote}"</div>
+</div>""",
         unsafe_allow_html=True
     )
     
     if st.button("Start New Fast"):
         st.session_state.fasting_ended = False
         st.session_state.start_time = None
-        st.session_state.final_duration = ""
-        st.session_state.final_hours = 0
+        st.session_state.confirm_stop = False
+        
+        try:
+            cookie_manager.delete("fasting_start_time")
+        except:
+            pass
+        
+        time.sleep(0.1)
         st.rerun()
 
 elif st.session_state.start_time is None:
     st.markdown(
-        """
-        <div style="text-align: center; padding: 60px 20px;">
-            <div style="font-size: 60px; margin-bottom: 20px;">🍽️</div>
-            <h3 style="color:rgb(134, 134, 139); font-weight: 500;">Ready to suffer?</h3>
-        </div>
-        """, 
+        """<div style="text-align: center; padding: 50px 20px;">
+<div style="font-size: 72px; margin-bottom: 20px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1));">🍽️</div>
+<h3 style="color:#8E8E93; font-weight: 500;">Ready to suffer?</h3>
+</div>""", 
         unsafe_allow_html=True
     )
-    st.write("")
     
     if st.button("Start Fasting Now"):
         new_time = datetime.now()
@@ -321,107 +248,125 @@ elif st.session_state.start_time is None:
             cookie_manager.set("fasting_start_time", new_time.isoformat(), expires_at=datetime.now() + timedelta(days=30))
         except:
             pass
-        time.sleep(0.5)
+        time.sleep(0.2)
         st.rerun()
         
-    st.markdown("<p style='text-align:center; color:#86868b; font-size:12px; margin-top:10px;'>Safe to close browser • Timer persists</p>", unsafe_allow_html=True)
-        
-    with st.expander("Cheating? Set past time"):
-        c1, c2 = st.columns(2)
-        with c1:
-            d_input = st.date_input("Date", value=datetime.now())
-        with c2:
-            t_input = st.time_input("Time", value=datetime.now())
-            
-        if st.button("Set Time"):
-            custom_time = datetime.combine(d_input, t_input)
-            st.session_state.start_time = custom_time
-            try:
-                cookie_manager.set("fasting_start_time", custom_time.isoformat(), expires_at=datetime.now() + timedelta(days=30))
-            except:
-                pass
-            time.sleep(0.5)
-            st.rerun()
+    st.markdown("<div class='caption-note' style='margin-top:20px;'>Safe to close browser • Timer persists</div>", unsafe_allow_html=True)
+    
+    with st.expander("History (Last 7 Days)"):
+        if not st.session_state.history:
+            st.caption("No history yet.")
+        else:
+            for item in st.session_state.history:
+                st.markdown(
+                    f"""<div class="history-card">
+<div style="display:flex; align-items:center;">
+<span style="font-size:24px; margin-right:12px;">{item.get('emoji', '⏱️')}</span>
+<div>
+<div style="font-size:16px; font-weight:600; color:#1C1C1E;">{item.get('duration', '-')}</div>
+<div style="font-size:12px; color:#8E8E93;">{item.get('date', '-')}</div>
+</div>
+</div>
+</div>""",
+                    unsafe_allow_html=True
+                )
 
 else:
-    placeholder = st.empty()
-    
     now = datetime.now()
     diff = now - st.session_state.start_time
     total_seconds = int(diff.total_seconds())
-    
     hours = total_seconds // 3600
     minutes = (total_seconds % 3600) // 60
     seconds = total_seconds % 60
     
-    current_stage = get_current_stage_info(hours)
-    
-    display_range = f"{current_stage['min']} - {current_stage['max']} HOURS" if current_stage['max'] < 9999 else "48+ HOURS"
+    stage = get_current_stage(hours)
+    display_range = f"{stage['min']} - {stage['max']} HOURS" if stage['max'] < 9999 else "48+ HOURS"
 
     st.markdown(f'<div class="big-timer">{hours:02}:{minutes:02}:{seconds:02}</div>', unsafe_allow_html=True)
     st.markdown('<div class="caption-note">It is safe to close this tab. Progress is saved.</div>', unsafe_allow_html=True)
 
     st.markdown(
-        f"""
-        <div class="status-card">
-            <span class="status-emoji">{current_stage['emoji']}</span>
-            <span class="status-range">{display_range}</span>
-            <div class="status-title">{current_stage['title']}</div>
-            <div class="status-desc">{current_stage['desc']}</div>
-        </div>
-        """,
+        f"""<div class="status-card">
+<span class="status-emoji">{stage['emoji']}</span>
+<span class="status-range">{display_range}</span>
+<div class="status-title">{stage['title']}</div>
+<div class="status-desc">{stage['desc']}</div>
+</div>""",
         unsafe_allow_html=True
     )
     
     with st.expander("See Fasting Journey", expanded=False):
-        for stage in FASTING_STAGES:
-            is_active = stage["min"] <= hours < stage["max"]
-            is_passed = hours >= stage["max"]
-            
-            range_text = f"{stage['min']}-{stage['max']}h" if stage['max'] < 9999 else "48h+"
+        for s in FASTING_STAGES:
+            is_active = s["min"] <= hours < s["max"]
+            is_passed = hours >= s["max"]
+            range_text = f"{s['min']}-{s['max']}h" if s['max'] < 9999 else "48h+"
             
             card_class = "timeline-future"
             icon_html = ""
-            
             if is_active:
                 card_class = "timeline-active"
-                icon_html = "<span class='checkmark'>● Doing</span>"
+                icon_html = "<span style='color:#007AFF; font-weight:bold; font-size:12px;'>● Doing</span>"
             elif is_passed:
                 card_class = "timeline-passed"
-                icon_html = "<span class='checkmark'>✓ Done</span>"
+                icon_html = "<span style='color:#8E8E93; font-size:12px;'>✓ Done</span>"
                 
             st.markdown(
-                f"""
-                <div class="{card_class} timeline-item">
-                    <div class="timeline-header">
-                        <span>{stage['emoji']} {stage['title']}</span>
-                        <span style="font-size:10px; color:#86868b;">{icon_html}</span>
-                    </div>
-                    <div class="timeline-text" style="display:flex; justify-content:space-between;">
-                        <span>{stage['desc']}</span>
-                        <span style="font-weight:600;">{range_text}</span>
-                    </div>
-                </div>
-                """,
+                f"""<div class="{card_class} timeline-item">
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+<span style="font-weight:600; font-size:14px;">{s['emoji']} {s['title']}</span>
+{icon_html}
+</div>
+<div style="font-size:12px; color:#666;">{s['desc']}</div>
+</div>""",
                 unsafe_allow_html=True
             )
 
     st.write("")
-    st.write("")
     
-    if st.button("I Give Up (Stop)", type="secondary"):
-        st.session_state.final_hours = hours
-        st.session_state.final_duration = f"{hours}h {minutes}m"
-        st.session_state.fasting_ended = True
-        st.session_state.start_time = None
-        
-        try:
-            cookie_manager.delete("fasting_start_time")
-        except:
-            pass
-        time.sleep(0.5)
-        st.rerun()
+    if not st.session_state.confirm_stop:
+        if st.button("I Give Up (Stop)"):
+            st.session_state.confirm_stop = True
+            st.rerun()
+    else:
+        st.markdown(
+            """<div class="confirm-box">
+<h4 style="margin:0 0 5px 0; color:#FF3B30;">End Fasting?</h4>
+<p style="font-size:13px; color:#8E8E93;">This session will be saved to history.</p>
+</div>""", 
+            unsafe_allow_html=True
+        )
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("End It"):
+                st.session_state.final_hours = hours
+                st.session_state.final_duration = f"{hours}h {minutes}m"
+                st.session_state.fasting_ended = True
+                
+                hist_emoji = get_quote(hours)[1]
+                new_entry = {
+                    "date": datetime.now().strftime("%d/%m"),
+                    "duration": f"{hours}h {minutes}m",
+                    "emoji": hist_emoji
+                }
+                
+                st.session_state.history.insert(0, new_entry)
+                st.session_state.history = st.session_state.history[:7]
+                
+                try:
+                    cookie_manager.delete("fasting_start_time")
+                    cookie_manager.set("fasting_history", json.dumps(st.session_state.history), expires_at=datetime.now() + timedelta(days=365))
+                except:
+                    pass
+                
+                st.session_state.start_time = None
+                st.session_state.confirm_stop = False
+                time.sleep(0.1)
+                st.rerun()
+                
+        with col2:
+            if st.button("Resume"):
+                st.session_state.confirm_stop = False
+                st.rerun()
 
     time.sleep(1)
     st.rerun()
-
