@@ -5,7 +5,7 @@ import time
 import json
 
 st.set_page_config(
-    page_title="Hello Fasting",
+    page_title="Hello Fasting 😈",
     page_icon="😈",
     layout="centered",
     initial_sidebar_state="collapsed"
@@ -208,6 +208,8 @@ cookie_manager = stx.CookieManager(key="fasting_manager")
 
 if 'initialized' not in st.session_state:
     st.session_state.initialized = False
+if 'retry_count' not in st.session_state:
+    st.session_state.retry_count = 0
 if 'start_time' not in st.session_state:
     st.session_state.start_time = None
 if 'fasting_ended' not in st.session_state:
@@ -221,9 +223,9 @@ if 'confirm_stop' not in st.session_state:
 if 'history' not in st.session_state:
     st.session_state.history = []
 
-cookies = cookie_manager.get_all()
-
 if not st.session_state.initialized:
+    cookies = cookie_manager.get_all()
+    
     if cookies:
         c_start = cookies.get("fasting_start_time")
         if c_start:
@@ -245,8 +247,13 @@ if not st.session_state.initialized:
         st.session_state.initialized = True
         st.rerun()
     else:
-        time.sleep(1)
-        st.rerun()
+        if st.session_state.retry_count < 2:
+            st.session_state.retry_count += 1
+            time.sleep(0.5)
+            st.rerun()
+        else:
+            st.session_state.initialized = True
+            st.rerun()
 
 FASTING_STAGES = [
     {"min": 0, "max": 4, "title": "Full", "desc": "Fueling up for the journey.", "emoji": "😋"},
@@ -285,7 +292,7 @@ if st.session_state.start_time is not None:
     else:
         title_class = "theme-burn"
 
-st.markdown(f'<h1 class="{title_class}">Hello Fasting</h1>', unsafe_allow_html=True)
+st.markdown(f'<h1 class="{title_class}">Hello Fasting 😈</h1>', unsafe_allow_html=True)
 
 if st.session_state.fasting_ended:
     if st.session_state.final_hours >= 16:
