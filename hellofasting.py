@@ -14,12 +14,13 @@ st.set_page_config(
 apple_css = """
 <style>
     :root {
-        --ios-bg: #F2F2F7;
-        --ios-card: #FFFFFF;
-        --ios-text: #1C1C1E;
-        --ios-subtext: #8E8E93;
+        --glass-bg: rgba(255, 255, 255, 0.75);
+        --glass-border: rgba(255, 255, 255, 0.5);
+        --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
         --ios-blue: #007AFF;
-        --ios-red: #FF3B30;
+        --ios-text: #000000;
+        --ios-subtext: #86868b;
+        --ios-bg: #F5F5F7;
     }
 
     .stApp {
@@ -31,30 +32,32 @@ apple_css = """
     header, footer, .stDeployButton { display: none !important; }
 
     h1 {
-        font-weight: 800 !important;
+        font-weight: 700 !important;
         color: var(--ios-text) !important;
         text-align: center;
         margin-top: 10px;
         letter-spacing: -0.5px;
+        font-size: 24px !important;
     }
 
     .stButton > button {
         width: 100%;
-        border-radius: 14px !important;
-        background-color: var(--ios-blue) !important;
+        border-radius: 18px !important;
+        background: var(--ios-blue) !important;
         color: white !important;
         border: none !important;
         font-weight: 600 !important;
         padding: 16px !important;
         font-size: 17px !important;
-        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
-        transition: transform 0.1s;
+        box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        backdrop-filter: blur(10px);
     }
     
     .stButton > button:active { transform: scale(0.96); }
 
     .big-timer {
-        font-size: 80px;
+        font-size: 86px;
         font-weight: 700;
         text-align: center;
         font-feature-settings: "tnum";
@@ -62,57 +65,90 @@ apple_css = """
         color: var(--ios-text);
         margin-top: 20px;
         line-height: 1;
-        letter-spacing: -2px;
+        letter-spacing: -3px;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
 
     .caption-note {
         font-size: 13px;
         color: var(--ios-subtext);
         text-align: center;
-        margin-bottom: 25px;
+        margin-bottom: 30px;
         font-weight: 500;
-        margin-top: 10px;
+        margin-top: 15px;
     }
 
     .status-card, .summary-card {
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: saturate(180%) blur(20px);
-        border-radius: 22px;
-        padding: 30px;
+        background: var(--glass-bg);
+        backdrop-filter: saturate(180%) blur(40px);
+        -webkit-backdrop-filter: saturate(180%) blur(40px);
+        border-radius: 32px;
+        padding: 36px;
         text-align: center;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-        margin-bottom: 20px;
-        border: 1px solid rgba(255,255,255,0.5);
+        box-shadow: var(--glass-shadow);
+        border: 1px solid var(--glass-border);
+        margin-bottom: 24px;
+        transition: transform 0.3s ease;
     }
     
     .history-card {
-        background: white;
-        border-radius: 16px;
-        padding: 15px;
-        margin-bottom: 10px;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 18px;
+        margin-bottom: 12px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        border: 1px solid rgba(255,255,255,0.4);
     }
 
-    .status-emoji { font-size: 50px; margin-bottom: 15px; display: block; }
+    .status-emoji { 
+        font-size: 56px; 
+        margin-bottom: 15px; 
+        display: block; 
+        filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));
+    }
     
     .status-range {
-        font-size: 11px; color: var(--ios-blue); font-weight: 700;
-        text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: block;
+        font-size: 11px; 
+        color: var(--ios-blue); 
+        font-weight: 800;
+        text-transform: uppercase; 
+        letter-spacing: 2px; 
+        margin-bottom: 10px; 
+        display: block;
+        opacity: 0.9;
     }
     
-    .status-title { font-size: 22px; font-weight: 700; margin-bottom: 5px; }
-    .status-desc { font-size: 15px; color: #3A3A3C; }
+    .status-title { 
+        font-size: 24px; 
+        font-weight: 700; 
+        margin-bottom: 8px; 
+        letter-spacing: -0.5px;
+    }
+    
+    .status-desc { 
+        font-size: 16px; 
+        color: #48484a; 
+        line-height: 1.4;
+    }
 
     .timeline-item {
-        padding: 12px 16px;
-        border-radius: 12px;
-        margin-bottom: 8px;
-        background: rgba(255,255,255,0.4);
+        padding: 16px 20px;
+        border-radius: 20px;
+        margin-bottom: 10px;
+        background: rgba(255, 255, 255, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.3);
     }
-    .timeline-active { background: white; box-shadow: 0 2px 12px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
+    
+    .timeline-active { 
+        background: rgba(255, 255, 255, 0.9); 
+        box-shadow: 0 8px 20px rgba(0,0,0,0.06); 
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        transform: scale(1.02);
+    }
+    
     .timeline-passed { opacity: 0.5; }
     
     div[data-testid="stExpander"] {
@@ -122,13 +158,14 @@ apple_css = """
     }
 
     .confirm-box {
-        background: #fff;
-        border-radius: 18px;
-        padding: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 24px;
         text-align: center;
         margin-top: 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        border: 1px solid rgba(255,255,255,0.5);
     }
 </style>
 """
@@ -213,8 +250,8 @@ if st.session_state.fasting_ended:
         f"""<div class="summary-card">
 <span class="status-emoji">{emoji}</span>
 <div style="font-size: 13px; color: #8E8E93; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">Total Fasted Time</div>
-<div style="font-size: 56px; font-weight: 800; color: #1C1C1E; margin: 10px 0;">{st.session_state.final_duration}</div>
-<div style="font-size: 16px; color: #8E8E93; font-style: italic;">"{quote}"</div>
+<div style="font-size: 64px; font-weight: 800; color: #1C1C1E; margin: 15px 0; letter-spacing: -2px;">{st.session_state.final_duration}</div>
+<div style="font-size: 17px; color: #8E8E93; font-style: italic;">"{quote}"</div>
 </div>""",
         unsafe_allow_html=True
     )
@@ -234,9 +271,9 @@ if st.session_state.fasting_ended:
 
 elif st.session_state.start_time is None:
     st.markdown(
-        """<div style="text-align: center; padding: 50px 20px;">
-<div style="font-size: 72px; margin-bottom: 20px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1));">🍽️</div>
-<h3 style="color:#8E8E93; font-weight: 500;">Ready to suffer?</h3>
+        """<div style="text-align: center; padding: 60px 20px;">
+<div style="font-size: 80px; margin-bottom: 25px; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.15));">🍽️</div>
+<h3 style="color:#8E8E93; font-weight: 600; font-size: 24px;">Ready to suffer?</h3>
 </div>""", 
         unsafe_allow_html=True
     )
@@ -261,10 +298,10 @@ elif st.session_state.start_time is None:
                 st.markdown(
                     f"""<div class="history-card">
 <div style="display:flex; align-items:center;">
-<span style="font-size:24px; margin-right:12px;">{item.get('emoji', '⏱️')}</span>
+<span style="font-size:28px; margin-right:16px;">{item.get('emoji', '⏱️')}</span>
 <div>
-<div style="font-size:16px; font-weight:600; color:#1C1C1E;">{item.get('duration', '-')}</div>
-<div style="font-size:12px; color:#8E8E93;">{item.get('date', '-')}</div>
+<div style="font-size:17px; font-weight: 700; color:#1C1C1E; letter-spacing: -0.5px;">{item.get('duration', '-')}</div>
+<div style="font-size:13px; color:#8E8E93; font-weight: 500;">{item.get('date', '-')}</div>
 </div>
 </div>
 </div>""",
@@ -305,18 +342,18 @@ else:
             icon_html = ""
             if is_active:
                 card_class = "timeline-active"
-                icon_html = "<span style='color:#007AFF; font-weight:bold; font-size:12px;'>● Doing</span>"
+                icon_html = "<span style='color:#007AFF; font-weight:800; font-size:12px; letter-spacing:0.5px;'>● Doing</span>"
             elif is_passed:
                 card_class = "timeline-passed"
-                icon_html = "<span style='color:#8E8E93; font-size:12px;'>✓ Done</span>"
+                icon_html = "<span style='color:#8E8E93; font-size:12px; font-weight:600;'>✓ Done</span>"
                 
             st.markdown(
                 f"""<div class="{card_class} timeline-item">
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-<span style="font-weight:600; font-size:14px;">{s['emoji']} {s['title']}</span>
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+<span style="font-weight:700; font-size:15px; letter-spacing:-0.3px;">{s['emoji']} {s['title']}</span>
 {icon_html}
 </div>
-<div style="font-size:12px; color:#666;">{s['desc']}</div>
+<div style="font-size:13px; color:#555; line-height:1.4;">{s['desc']}</div>
 </div>""",
                 unsafe_allow_html=True
             )
@@ -330,8 +367,8 @@ else:
     else:
         st.markdown(
             """<div class="confirm-box">
-<h4 style="margin:0 0 5px 0; color:#FF3B30;">End Fasting?</h4>
-<p style="font-size:13px; color:#8E8E93;">This session will be saved to history.</p>
+<h4 style="margin:0 0 8px 0; color:#FF3B30; font-weight: 700; font-size: 18px;">End Fasting?</h4>
+<p style="font-size:14px; color:#8E8E93; font-weight: 500;">This session will be saved to history.</p>
 </div>""", 
             unsafe_allow_html=True
         )
