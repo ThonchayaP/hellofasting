@@ -167,7 +167,7 @@ apple_css = """
 """
 st.markdown(apple_css, unsafe_allow_html=True)
 
-cookie_manager = stx.CookieManager(key="fasting_pro_manager")
+cookie_manager = stx.CookieManager(key="fasting_v2")
 
 if 'start_time' not in st.session_state:
     st.session_state.start_time = None
@@ -181,18 +181,23 @@ if 'confirm_stop' not in st.session_state:
     st.session_state.confirm_stop = False
 if 'history' not in st.session_state:
     st.session_state.history = []
+if 'cookies_loaded' not in st.session_state:
+    st.session_state.cookies_loaded = False
 
 cookies = cookie_manager.get_all()
-if cookies:
-    if st.session_state.start_time is None:
+
+if not st.session_state.cookies_loaded:
+    if cookies is None:
+        time.sleep(0.5)
+        st.rerun()
+    else:
         c_start = cookies.get("fasting_start_time")
         if c_start:
             try:
                 st.session_state.start_time = datetime.fromisoformat(c_start)
             except:
                 pass
-    
-    if not st.session_state.history:
+        
         c_hist = cookies.get("fasting_history")
         if c_hist:
             try:
@@ -200,6 +205,9 @@ if cookies:
                     st.session_state.history = json.loads(c_hist)
             except:
                 pass
+        
+        st.session_state.cookies_loaded = True
+        st.rerun()
 
 FASTING_STAGES = [
     {"min": 0, "max": 4, "title": "Full", "desc": "Fueling up for the journey.", "emoji": "😋"},
