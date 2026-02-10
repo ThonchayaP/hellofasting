@@ -21,6 +21,7 @@ apple_css = """
         --ios-text: #000000;
         --ios-subtext: #86868b;
         --ios-bg: #F5F5F7;
+        --ios-red: #FF3B30;
     }
 
     .stApp {
@@ -37,32 +38,14 @@ apple_css = """
         100% { transform: translateY(0px); }
     }
 
-    @keyframes breathe {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.02); }
-        100% { transform: scale(1); }
-    }
-
     @keyframes burn {
         0% { text-shadow: 0 0 5px rgba(0,0,0,0.1); transform: scale(1); }
         50% { text-shadow: 0 0 15px rgba(0,0,0,0.15); transform: scale(1.02); }
         100% { text-shadow: 0 0 5px rgba(0,0,0,0.1); transform: scale(1); }
     }
 
-    .theme-idle {
-        animation: float 4s ease-in-out infinite;
-        color: var(--ios-text) !important;
-    }
-
-    .theme-calm {
-        animation: breathe 4s ease-in-out infinite;
-        color: var(--ios-text) !important;
-    }
-
-    .theme-burn {
-        animation: burn 0.8s ease-in-out infinite;
-        color: var(--ios-text) !important;
-    }
+    .theme-idle { animation: float 4s ease-in-out infinite; color: var(--ios-text); }
+    .theme-active { animation: burn 2s ease-in-out infinite; color: var(--ios-blue); }
 
     h1 {
         font-weight: 800 !important;
@@ -70,7 +53,6 @@ apple_css = """
         margin-top: 10px;
         letter-spacing: -1px;
         font-size: 28px !important;
-        transition: all 0.5s ease;
     }
 
     .stButton > button {
@@ -83,7 +65,7 @@ apple_css = """
         padding: 16px !important;
         font-size: 17px !important;
         box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        transition: transform 0.2s;
         backdrop-filter: blur(10px);
     }
     
@@ -121,19 +103,6 @@ apple_css = """
         box-shadow: var(--glass-shadow);
         border: 1px solid var(--glass-border);
         margin-bottom: 24px;
-        transition: transform 0.3s ease;
-    }
-    
-    .history-card {
-        background: rgba(255, 255, 255, 0.6);
-        backdrop-filter: blur(20px);
-        border-radius: 20px;
-        padding: 18px;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border: 1px solid rgba(255,255,255,0.4);
     }
 
     .status-emoji { 
@@ -167,32 +136,20 @@ apple_css = """
         line-height: 1.4;
     }
 
-    .timeline-item {
-        padding: 16px 20px;
+    .history-card {
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(20px);
         border-radius: 20px;
-        margin-bottom: 10px;
-        background: rgba(255, 255, 255, 0.4);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-    
-    .timeline-active { 
-        background: rgba(255, 255, 255, 0.9); 
-        box-shadow: 0 8px 20px rgba(0,0,0,0.06); 
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        transform: scale(1.02);
-    }
-    
-    .timeline-passed { opacity: 0.5; }
-    
-    div[data-testid="stExpander"] {
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
+        padding: 18px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: 1px solid rgba(255,255,255,0.4);
     }
 
     .confirm-box {
         background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(20px);
         border-radius: 24px;
         padding: 24px;
         text-align: center;
@@ -200,16 +157,18 @@ apple_css = """
         box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         border: 1px solid rgba(255,255,255,0.5);
     }
+    
+    div[data-testid="stExpander"] {
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
 </style>
 """
 st.markdown(apple_css, unsafe_allow_html=True)
 
-cookie_manager = stx.CookieManager(key="fasting_manager")
+cookie_manager = stx.CookieManager(key="fasting_pro_manager")
 
-if 'initialized' not in st.session_state:
-    st.session_state.initialized = False
-if 'retry_count' not in st.session_state:
-    st.session_state.retry_count = 0
 if 'start_time' not in st.session_state:
     st.session_state.start_time = None
 if 'fasting_ended' not in st.session_state:
@@ -223,37 +182,24 @@ if 'confirm_stop' not in st.session_state:
 if 'history' not in st.session_state:
     st.session_state.history = []
 
-if not st.session_state.initialized:
-    cookies = cookie_manager.get_all()
-    
-    if cookies:
+cookies = cookie_manager.get_all()
+if cookies:
+    if st.session_state.start_time is None:
         c_start = cookies.get("fasting_start_time")
         if c_start:
             try:
                 st.session_state.start_time = datetime.fromisoformat(c_start)
             except:
-                st.session_state.start_time = None
-        
+                pass
+    
+    if not st.session_state.history:
         c_hist = cookies.get("fasting_history")
         if c_hist:
             try:
                 if isinstance(c_hist, str):
                     st.session_state.history = json.loads(c_hist)
-                elif isinstance(c_hist, list):
-                    st.session_state.history = c_hist
             except:
                 pass
-        
-        st.session_state.initialized = True
-        st.rerun()
-    else:
-        if st.session_state.retry_count < 2:
-            st.session_state.retry_count += 1
-            time.sleep(0.5)
-            st.rerun()
-        else:
-            st.session_state.initialized = True
-            st.rerun()
 
 FASTING_STAGES = [
     {"min": 0, "max": 4, "title": "Full", "desc": "Fueling up for the journey.", "emoji": "😋"},
@@ -283,14 +229,7 @@ def get_quote(hours):
 
 title_class = "theme-idle"
 if st.session_state.start_time is not None:
-    now_calc = datetime.now()
-    diff_calc = now_calc - st.session_state.start_time
-    total_sec_calc = int(diff_calc.total_seconds())
-    h_calc = total_sec_calc // 3600
-    if h_calc < 12:
-        title_class = "theme-calm"
-    else:
-        title_class = "theme-burn"
+    title_class = "theme-active"
 
 st.markdown(f'<h1 class="{title_class}">Hello Fasting 😈</h1>', unsafe_allow_html=True)
 
@@ -336,7 +275,7 @@ elif st.session_state.start_time is None:
         new_time = datetime.now()
         st.session_state.start_time = new_time
         try:
-            cookie_manager.set("fasting_start_time", new_time.isoformat(), expires_at=datetime.now() + timedelta(days=30))
+            cookie_manager.set("fasting_start_time", new_time.isoformat(), expires_at=datetime.now() + timedelta(days=365))
         except:
             pass
         time.sleep(0.5)
@@ -374,7 +313,7 @@ else:
     display_range = f"{stage['min']} - {stage['max']} HOURS" if stage['max'] < 9999 else "48+ HOURS"
 
     st.markdown(f'<div class="big-timer">{hours:02}:{minutes:02}:{seconds:02}</div>', unsafe_allow_html=True)
-    st.markdown('<div class="caption-note">It is safe to close this tab. Progress is saved.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="caption-note">Progress is saved automatically.</div>', unsafe_allow_html=True)
 
     st.markdown(
         f"""<div class="status-card">
@@ -392,19 +331,20 @@ else:
             is_passed = hours >= s["max"]
             range_text = f"{s['min']}-{s['max']}h" if s['max'] < 9999 else "48h+"
             
-            card_class = "timeline-future"
+            card_style = "background: rgba(255,255,255,0.4); opacity: 0.5;"
             icon_html = ""
+            
             if is_active:
-                card_class = "timeline-active"
-                icon_html = "<span style='color:#007AFF; font-weight:800; font-size:12px; letter-spacing:0.5px;'>● Doing</span>"
+                card_style = "background: rgba(255,255,255,0.9); box-shadow: 0 4px 12px rgba(0,0,0,0.05); transform: scale(1.02); border: 1px solid rgba(255,255,255,0.8);"
+                icon_html = "<span style='color:#007AFF; font-weight:800; font-size:12px;'>● Doing</span>"
             elif is_passed:
-                card_class = "timeline-passed"
+                card_style = "background: rgba(255,255,255,0.6);"
                 icon_html = "<span style='color:#8E8E93; font-size:12px; font-weight:600;'>✓ Done</span>"
                 
             st.markdown(
-                f"""<div class="{card_class} timeline-item">
+                f"""<div style="padding: 16px 20px; border-radius: 20px; margin-bottom: 10px; {card_style} transition: all 0.3s ease;">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-<span style="font-weight:700; font-size:15px; letter-spacing:-0.3px;">
+<span style="font-weight:700; font-size:15px; color:#1C1C1E;">
     {s['emoji']} {s['title']} 
     <span style="color:#8E8E93; font-size:13px; margin-left:8px; font-weight:400;">{range_text}</span>
 </span>
@@ -439,7 +379,7 @@ else:
                 hist_emoji = get_quote(hours)[1]
                 new_entry = {
                     "date": datetime.now().strftime("%d/%m"),
-                    "duration": f"{hours}h {minutes}m {seconds}s",
+                    "duration": f"{hours}h {minutes}m",
                     "emoji": hist_emoji
                 }
                 
